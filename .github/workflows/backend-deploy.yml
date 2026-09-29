@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'backend/**'
+      - 'model/**'
+      - '.github/workflows/backend-deploy.yml'
 
 permissions:
   contents: read
@@ -25,19 +29,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-            lfs: true
+          lfs: true
 
+      # 2. Verify BERT model
       - name: Verify BERT model
         run: |
-            ls -lh model/model.safetensors
-            test $(stat -c%s model/model.safetensors) -gt 100000000
+          ls -lh model/model.safetensors
+          test $(stat -c%s model/model.safetensors) -gt 100000000
 
-      # 2. Verify backend Python files
+      # 3. Verify backend Python files
       - name: Verify Python files
         run: |
           python -m compileall backend
 
-      # 3. Log in to Azure using GitHub OIDC
+      # 4. Log in to Azure using GitHub OIDC
       - name: Azure login
         uses: azure/login@v2
         with:
@@ -45,12 +50,12 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      # 4. Log in to Azure Container Registry
+      # 5. Log in to Azure Container Registry
       - name: Log in to Azure Container Registry
         run: |
           az acr login --name $AZURE_CONTAINER_REGISTRY
 
-      # 5. Build Docker image
+      # 6. Build Docker image
       - name: Build Docker image
         run: |
           docker build \
@@ -58,15 +63,13 @@ jobs:
             -t $ACR_LOGIN_SERVER/$IMAGE_NAME:${{ github.sha }} \
             .
 
-      # 6. Push Docker image to ACR
+      # 7. Push Docker image to ACR
       - name: Push Docker image
         run: |
           docker push \
             $ACR_LOGIN_SERVER/$IMAGE_NAME:${{ github.sha }}
 
-      
-
-      # 7. Deploy the new image
+      # 8. Deploy the new image
       - name: Deploy backend
         run: |
           az containerapp update \
@@ -76,7 +79,7 @@ jobs:
             --cpu 1.0 \
             --memory 2.0Gi
 
-      # 8. Configure external ingress on port 8000
+      # 9. Configure external ingress on port 8000
       - name: Configure backend ingress
         run: |
           az containerapp ingress enable \
