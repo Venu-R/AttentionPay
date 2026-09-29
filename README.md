@@ -18,7 +18,7 @@ explanation of the model's prediction.
 
 ## Live Demo
 
-**Frontend:** https://attention-pay.vercel.app
+**Deployed Link:** https://attention-pay.vercel.app
 
 The backend is deployed separately and is accessed by the frontend
 through the configured `VITE_API_BASE_URL`.
