@@ -13,6 +13,7 @@ env:
   AZURE_RESOURCE_GROUP: rg-attentionpay
   AZURE_CONTAINER_APP: attentionpay-backend
   AZURE_CONTAINER_REGISTRY: acrattentionpay
+  ACR_LOGIN_SERVER: acrattentionpay-daa8a2cxbnenhkcd.azurecr.io
   IMAGE_NAME: attentionpay-backend
 
 jobs:
@@ -47,14 +48,14 @@ jobs:
         run: |
           docker build \
             -f backend/Dockerfile \
-            -t $AZURE_CONTAINER_REGISTRY.azurecr.io/$IMAGE_NAME:${{ github.sha }} \
+            -t $ACR_LOGIN_SERVER/$IMAGE_NAME:${{ github.sha }} \
             .
 
       # 6. Push Docker image to ACR
       - name: Push Docker image
         run: |
           docker push \
-            $AZURE_CONTAINER_REGISTRY.azurecr.io/$IMAGE_NAME:${{ github.sha }}
+            $ACR_LOGIN_SERVER/$IMAGE_NAME:${{ github.sha }}
 
       # 7. Configure Container App to use ACR managed identity
       - name: Configure ACR managed identity
@@ -62,7 +63,7 @@ jobs:
           az containerapp registry set \
             --name $AZURE_CONTAINER_APP \
             --resource-group $AZURE_RESOURCE_GROUP \
-            --server $AZURE_CONTAINER_REGISTRY.azurecr.io \
+            --server $ACR_LOGIN_SERVER \
             --identity system
 
       # 8. Deploy the new image
@@ -71,7 +72,7 @@ jobs:
           az containerapp update \
             --name $AZURE_CONTAINER_APP \
             --resource-group $AZURE_RESOURCE_GROUP \
-            --image $AZURE_CONTAINER_REGISTRY.azurecr.io/$IMAGE_NAME:${{ github.sha }} \
+            --image $ACR_LOGIN_SERVER/$IMAGE_NAME:${{ github.sha }} \
             --cpu 1.0 \
             --memory 2.0Gi
 
